@@ -25,11 +25,11 @@ The system consists of several specialized agents:
 - Generates detailed prompts for image generation
 - Combines video summary and image analysis
 - Incorporates brand themes and styling preferences
-- Creates optimized prompts for DALL-E 3
+- Creates optimized prompts for gpt-image-1
 
 ### 4. Image Generation Agent (`imageGen.py`)
 
-- Handles image generation and editing using DALL-E 3
+- Handles image generation and editing using gpt-image-1
 - Supports both text-to-image and image-to-image generation
 - Manages image quality and size parameters
 - Saves generated thumbnails with timestamps
