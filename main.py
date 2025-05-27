@@ -7,6 +7,9 @@ import os
 import json
 import base64
 import time
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import yt_dlp
 
 # Load the API key
 load_dotenv()
@@ -15,31 +18,66 @@ api_key = os.getenv("OPENAI_API_KEY")
 # Initialize the OpenAI client
 client = OpenAI(api_key=api_key)
 
-def main():
+def extract_video_metadata(url):
+    """Extract video metadata using yt-dlp"""
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': True,
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            return {
+                'channel_name': info.get('channel', ''),
+                'video_title': info.get('title', ''),
+                'description': info.get('description', ''),
+                'tags': info.get('tags', [])
+            }
+    except Exception as e:
+        print(f"Warning: Failed to fetch video metadata: {str(e)}")
+        return None
+
+async def process_video_async(url):
+    """Run video processing in a thread pool"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, process_video, url)
+
+async def process_images_async(image_paths):
+    """Run image processing in a thread pool"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, process_images, image_paths)
+
+async def fetch_metadata_async(url):
+    """Run metadata fetching in a thread pool"""
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, extract_video_metadata, url)
+
+async def main_async():
     print("=== YouTube Thumbnail Generator ===")
     
-    # Step 1: Get video summary
-    print("\nStep 1: Video Analysis")
-    print("Enter YouTube video URL:")
+    # Get video URL and image preference upfront
+    print("\nEnter YouTube video URL:")
     url = input("> ").strip()
     
-    video_data = process_video(url)
-    if not video_data:
-        print("Failed to process video. Exiting...")
-        return
-    
-    print("\nVideo Summary:")
-    print(video_data["summary"])
-    
-    # Step 2: Process images
-    print("\nStep 2: Image Analysis")
-    print("Do you want to use existing images? (yes/no)")
+    print("\nDo you want to use existing images? (yes/no)")
     use_existing = input("> ").lower().strip() == "yes"
     
-    image_paths = []  # Store image paths
+    # Start all tasks immediately
+    video_task = asyncio.create_task(process_video_async(url))
+    metadata_task = asyncio.create_task(fetch_metadata_async(url))
+    
+    # Initialize image task as None
+    image_task = None
+    image_paths = []
+    
+    # If using existing images, collect paths and start processing immediately
     if use_existing:
-        # Get image paths from user
-        print("Enter the paths to your images (one per line, press Enter twice when done):")
+        print("\nEnter the paths to your images (one per line, press Enter twice when done):")
         while True:
             path = input("> ").strip()
             if not path:
@@ -52,9 +90,33 @@ def main():
         if not image_paths:
             print("No valid images provided. Exiting...")
             return
-
+            
+        # Start image processing immediately after getting paths
         print(f"\nAnalyzing {len(image_paths)} images...")
-        image_analysis = process_images(image_paths)
+        image_task = asyncio.create_task(process_images_async(image_paths))
+
+    # Wait for all tasks to complete
+    video_data = await video_task
+    metadata = await metadata_task
+    
+    if not video_data:
+        print("Failed to process video. Exiting...")
+        return
+    
+    print("\nVideo Summary:")
+    print(video_data["summary"])
+    
+    if metadata:
+        print("\nVideo Metadata:")
+        print(f"Channel: {metadata['channel_name']}")
+        print(f"Title: {metadata['video_title']}")
+        print(f"Description: {metadata['description']}")
+        if metadata['tags']:
+            print(f"Tags: {', '.join(metadata['tags'][:5])}...")
+    
+    # Get image analysis results if we were processing images
+    if use_existing:
+        image_analysis = await image_task
         if not image_analysis:
             print("Failed to analyze images. Exiting...")
             return
@@ -73,10 +135,12 @@ def main():
     print("Enter brand theme (press Enter to skip):")
     brand_theme = input("> ").strip() or None
     
+    # Enhance the prompt generation with metadata
     prompt = generate_thumbnail_prompt(
         video_data["summary"],
         image_analysis["images"],
-        brand_theme
+        brand_theme,
+        metadata=metadata  # Pass metadata to prompt generation
     )
     
     if not prompt:
@@ -124,6 +188,9 @@ def main():
     
     print(f"\nThumbnail saved as: {output_filename}")
     print("\nProcess completed successfully!")
+
+def main():
+    asyncio.run(main_async())
 
 if __name__ == "__main__":
     main() 
