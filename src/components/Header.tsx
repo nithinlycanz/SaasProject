@@ -7,8 +7,11 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="youtube-container py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2 text-youtube-black">
-          <Youtube className="h-8 w-8 text-youtube-red" />
-          <span className="text-xl font-bold">Thumbnail Generator</span>
+          {/* <Youtube className="h-8 w-8 text-youtube-red" /> */}
+        <span className="text-xl font-bold transition-colors hover:text-youtube-black">
+  <span className="text-youtube-red">Thumb</span> AI
+</span>
+
         </Link>
         <nav>
           <ul className="flex space-x-6">

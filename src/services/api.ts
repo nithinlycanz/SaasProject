@@ -10,13 +10,13 @@ export const fetchVideoData = async (url: string) => {
   // Mock response based on the Python code structure
   return {
     metadata: {
-      channel_name: 'Example Channel',
+      channel_name: 'Channel',
       video_title: url,
-      description: 'This is a sample video description that would normally be fetched from the YouTube API.',
+      description: 'This is the video description.',
       tags: ['tutorial', 'youtube', 'thumbnails', 'ai', 'design']
     },
     videoSummary: {
-      summary: 'This video explains how to create effective YouTube thumbnails that attract viewers. It covers design principles, color theory, and practical tips for higher click-through rates. The presenter demonstrates several examples of before and after thumbnail designs.'
+      summary: 'lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     }
   };
 };
