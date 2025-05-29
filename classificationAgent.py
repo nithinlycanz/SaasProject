@@ -1,4 +1,4 @@
-from google import genai
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import json
@@ -6,11 +6,9 @@ from PIL import Image
 import base64
 from io import BytesIO
 
-# Load environment variables
 load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Configure Gemini
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 def encode_image_to_base64(image_path):
     """Convert image to base64 string"""

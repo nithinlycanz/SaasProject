@@ -1,15 +1,20 @@
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.formatters import TextFormatter
-from google import genai
+import re
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
-import re
+import json
+from PIL import Image
+import base64
+from io import BytesIO
+from youtube_transcript_api import YouTubeTranscriptApi
+
 
 # Load environment variables
 load_dotenv()
 
 # Configure Gemini
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
 
 def extract_video_id(url):
     """Extract video ID from YouTube URL"""
@@ -99,3 +104,4 @@ if __name__ == "__main__":
         print(result["summary"])
     else:
         print("Failed to process video") 
+        
